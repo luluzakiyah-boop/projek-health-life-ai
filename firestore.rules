@@ -1,0 +1,27 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Aturan isolasi data pengguna berdasarkan UID autentikasi
+    match /users/{userId} {
+      // Pengguna hanya dapat membaca dan mengubah dokumen profil miliknya sendiri
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // Subkoleksi log harian (water, exercise, sleep, calories)
+      match /dailyLogs/{logId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Subkoleksi percakapan AI Assistant
+      match /chats/{chatId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // Blokir akses publik untuk seluruh dokumen lain
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
